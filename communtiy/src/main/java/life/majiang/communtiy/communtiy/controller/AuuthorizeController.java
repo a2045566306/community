@@ -2,7 +2,10 @@ package life.majiang.communtiy.communtiy.controller;
 
 import life.majiang.communtiy.communtiy.dto.AccessTokenDTO;
 import life.majiang.communtiy.communtiy.dto.GitHubUser;
+import life.majiang.communtiy.communtiy.mapper.UserMapper;
+import life.majiang.communtiy.communtiy.model.User;
 import life.majiang.communtiy.communtiy.provider.GitHubProvider;
+import org.apache.ibatis.annotations.Insert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.UUID;
 
 @Controller
 public class AuuthorizeController {
@@ -26,6 +30,9 @@ public class AuuthorizeController {
     @Value("${github.redirect_url}")
     private String redirectUrl;
 
+    @Autowired
+    private UserMapper userMapper;
+
     @GetMapping("/callback")
     public String callback(@RequestParam(name = "code") String code,
                            @RequestParam(name = "state") String state,
@@ -37,10 +44,17 @@ public class AuuthorizeController {
         accessTokenDTO.setRedirect_url(redirectUrl);
         accessTokenDTO.setState(state);
         String accessToken = gitHubProvider.getAccessToken(accessTokenDTO);
-        GitHubUser user = (GitHubUser) gitHubProvider.getUser(accessToken);
-        if (user != null) {
+        GitHubUser gitHubUser = (GitHubUser) gitHubProvider.getUser(accessToken);
+        if (gitHubUser != null) {
+            User user = new User();
+            user.setToken(UUID.randomUUID().toString());
+            user.setName(gitHubUser.getName());
+            user.setAccountId(String.valueOf(gitHubUser.getId()));
+            user.setGmtCreate(System.currentTimeMillis());
+            user.setGmtModified(user.getGmtCreate());
+            userMapper.insert(user);
             //登陆成功,写cookie和session
-            request.getSession().setAttribute("user",user);
+            request.getSession().setAttribute("user",gitHubUser);
             return "redirect:/";
         } else {
             //登陆失败,重新登录
