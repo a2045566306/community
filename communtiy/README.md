@@ -15,6 +15,7 @@
 ## 工具
 [Git](https://git-scm.com/domload)
 [Visual Paradiom](https://www.visual-paradigm.com)
+[Flyway](https://flywaydb.org/documentation/getstarted/why)
 
 ## 脚本
 ```sql
@@ -28,3 +29,6 @@ CREATE TABLE USER
   GMT_MODIFIED BIGINT
 )
 ``` 
+```bash
+mvn flyway:migrate
+```
