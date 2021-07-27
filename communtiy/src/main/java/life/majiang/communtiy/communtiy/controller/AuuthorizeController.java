@@ -29,8 +29,8 @@ public class AuuthorizeController {
     @Value("${github.client.secret}")
     private String clientSecret;
 
-    @Value("${github.redirect_url}")
-    private String redirectUrl;
+    @Value("${github.redirect_uri}")
+    private String redirectUri;
 
     @Autowired
     private UserMapper userMapper;
@@ -43,10 +43,10 @@ public class AuuthorizeController {
         accessTokenDTO.setClient_id(clientId);
         accessTokenDTO.setClient_secret(clientSecret);
         accessTokenDTO.setCode(code);
-        accessTokenDTO.setRedirect_url(redirectUrl);
+        accessTokenDTO.setRedirect_uri(redirectUri);
         accessTokenDTO.setState(state);
         String accessToken = gitHubProvider.getAccessToken(accessTokenDTO);
-        GitHubUser gitHubUser = (GitHubUser) gitHubProvider.getUser(accessToken);
+        GitHubUser gitHubUser = gitHubProvider.getUser(accessToken);
         if (gitHubUser != null && gitHubUser.getId() != null) {
             User user = new User();
             String token = UUID.randomUUID().toString();
@@ -55,6 +55,7 @@ public class AuuthorizeController {
             user.setAccountId(String.valueOf(gitHubUser.getId()));
             user.setGmtCreate(System.currentTimeMillis());
             user.setGmtModified(user.getGmtCreate());
+            user.setAvatarUrl(gitHubUser.getAvatar_url());
             userMapper.insert(user);
             response.addCookie(new Cookie("token",token));
             return "redirect:/";
