@@ -2,10 +2,9 @@ package life.majiang.communtiy.communtiy.controller;
 
 import life.majiang.communtiy.communtiy.dto.AccessTokenDTO;
 import life.majiang.communtiy.communtiy.dto.GitHubUser;
-import life.majiang.communtiy.communtiy.mapper.UserMapper;
 import life.majiang.communtiy.communtiy.model.User;
 import life.majiang.communtiy.communtiy.provider.GitHubProvider;
-import org.apache.ibatis.annotations.Insert;
+import life.majiang.communtiy.communtiy.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -33,7 +32,7 @@ public class AuuthorizeController {
     private String redirectUri;
 
     @Autowired
-    private UserMapper userMapper;
+    private UserService userService;
 
     @GetMapping("/callback")
     public String callback(@RequestParam(name = "code") String code,
@@ -53,16 +52,25 @@ public class AuuthorizeController {
             user.setToken(token);
             user.setName(gitHubUser.getName());
             user.setAccountId(String.valueOf(gitHubUser.getId()));
-            user.setGmtCreate(System.currentTimeMillis());
-            user.setGmtModified(user.getGmtCreate());
             user.setAvatarUrl(gitHubUser.getAvatarUrl());
-            userMapper.insert(user);
+            userService.createOrUpdate(user);
             response.addCookie(new Cookie("token",token));
             return "redirect:/";
         } else {
             //登陆失败,重新登录
             return "redirect:/";
         }
+    }
+
+
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest request,
+                         HttpServletResponse response) {
+        request.getSession().removeAttribute("user");
+        Cookie cookie = new Cookie("token", null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        return "redirect:/";
     }
 }
 

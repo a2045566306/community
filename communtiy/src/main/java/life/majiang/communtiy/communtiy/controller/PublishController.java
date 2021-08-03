@@ -53,7 +53,6 @@ public class PublishController {
             model.addAttribute("error", "用户未登录");
             return "publish";
         }
-
             Question question = new Question();
             question.setTitle(title);
             question.setDescription(description);
